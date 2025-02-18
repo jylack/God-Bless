@@ -52,7 +52,7 @@ Material:
     - _Cull: 2
     - _Glossiness: 0.6
     - _Metallic: 0.2
-    - _NormalStrength1: 0.17
+    - _NormalStrength1: 0.12
     - _NormalStrength2: 0.8
     - _SpacPow: 2
     - _WavePower: 0.2

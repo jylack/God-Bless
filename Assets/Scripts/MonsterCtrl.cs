@@ -4,85 +4,77 @@ using UnityEngine.AI;
 
 public class MonsterCtrl : MonoBehaviour
 {
-    //속성
-    public int MaxHp { get; set; }
-    public int Hp { get; set; }
-    public int Atk { get; set; }
-    public int Matk { get; set; }
-    public int Def { get; set; }
-    public List<string> Skills { get; set; }
-    public bool InGate { get; set; }
+    public IMonsterState currentState;  // 현재 상태
+    public NavMeshAgent Agent { get; private set; }
 
-    public List<Transform> patrolPoints;
-    public Transform player;
-    public float chaseRange = 10f;
-    public float patrolSpeed = 3.5f;
+    [Header("몬스터 기본 속성")]
+    public float maxHp = 100f;
+    public float hp = 100f;
+    
     public float chaseSpeed = 5f;
-    private NavMeshAgent agent;
-    private IMonsterState currentState;
-    private int currentPatrolIndex;
-    public NavMeshAgent Agent { get => agent; }
+    public float chaseRange = 10f; //추격 범위
+    public float patrolSpeed = 2f;
 
+    //public float attackPower = 10f;
+    public float atk = 10f;
+    public float magicAtk;
+    public float def;
+    public float magicDef;
 
-    //현재상태
-    public IMonsterState CurrentState { get; private set; }
+    public List<string> skills;
+    public List<Vector3> patrolPoints;//순찰 좌표
 
+    private Transform player;
+    public Transform Player { get => player; }
 
-    // 생성자
-    public MonsterCtrl(int maxHp, int atk, int matk, int def, List<string> skills)
+    private void Awake()
     {
-        MaxHp = maxHp;
-        Hp = maxHp;
-        Atk = atk;
-        Matk = matk;
-        Def = def;
-        Skills = skills;
-        InGate = false;
-        CurrentState = new CityAitState(); //기본상태
+        Agent = GetComponent<NavMeshAgent>();
+        player = GameObject.FindWithTag("Player")?.transform;
+
+        ChangeState(new CityAitState()); // 초기 상태 = 순찰
     }
-    // 상태를 변경하는 메서드
+
+    private void Update()
+    {
+        if (currentState != null)
+        {
+            currentState.UpdateState(this);
+        }
+    }
+
+    /// <summary>
+    /// 몬스터의 상태를 변경하는 메서드
+    /// </summary>
     public void ChangeState(IMonsterState newState)
     {
-        CurrentState = newState;
+        currentState = newState;
         currentState.PlayState(this);
     }
-    // 현재 상태를 처리하는 메서드
-    public void HandleState()
-    {
-        CurrentState.PlayState(this);
 
-    }
-
-    void Start()
+    /// <summary>
+    /// 플레이어가 추적 범위 내에 있는지 체크
+    /// </summary>
+    public bool IsPlayerInChaseRange()
     {
-        agent = GetComponent<NavMeshAgent>();
-        currentState = new CityAitState();
-        currentState.PlayState(this);
-    }
-    void Update()
-    {
-        currentState.UpdateState(this);
+        if (player == null) return false;
+        return Vector3.Distance(transform.position, player.position) < 10f;
     }
 
-    public void SetDestination(Vector3 destination)
+    /// <summary>
+    /// 랜덤한 위치로 이동하는 메서드 (순찰)
+    /// </summary>
+    public void MoveToNextPatrolPoint()
     {
-        agent.SetDestination(destination);
-    }
-    public bool IsPlayerInChaseRange() 
-    {
-        return Vector3.Distance(transform.position, player.position) <= chaseRange; 
-    }
-    public void MoveToNextPatrolPoint() 
-    {
-        if (patrolPoints.Count == 0) return;
-        
-        agent.destination = patrolPoints[currentPatrolIndex].position; 
-        currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Count;
+        Vector3 patrolPoint = new Vector3(Random.Range(-10, 10), 0, Random.Range(-10, 10));
+        Agent.SetDestination(patrolPoint);
     }
 
-    public void SetSpeed(float speed) 
+    /// <summary>
+    /// 플레이어를 공격하는 함수
+    /// </summary>
+    public void AttackPlayer()
     {
-        agent.speed = speed;
+        Debug.Log("몬스터가 플레이어를 공격!");
     }
-
 }
