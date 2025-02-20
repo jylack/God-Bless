@@ -1,7 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GateCtrl : MonoBehaviour
+public enum Gate_Way_Group
+{
+    A, B, C, D, E, F, G, H, I, end
+}
+
+public class MonsterSpawner : MonoBehaviour
 {
     [Header("오브젝트 풀에서 미리 받을 몬스터 수")]
     public int prefetchCount = 5;
@@ -11,6 +16,19 @@ public class GateCtrl : MonoBehaviour
 
     // 미리 받아놓은 몬스터들을 저장할 리스트
     private List<GameObject> pooledMonsters = new List<GameObject>();
+
+    Gate_Way_Group group;
+
+    public void GateSet(Gate_Way_Group posName, List<UnitCtrl> unit)
+    {
+        //그룹내의 좌표들
+        var wayPos = GameObject.Find("WayPoints").GetComponent<WayPoints>().GetWayPos(posName);
+        //그룹내의 좌표들 중에서 랜덤좌표
+        var wayRnd = wayPos[Random.Range(0, wayPos.Count)];
+        //지정
+        spawnOffset = wayRnd.position;
+        group = posName;
+    }
 
     void Start()
     {
@@ -23,6 +41,7 @@ public class GateCtrl : MonoBehaviour
     /// </summary>
     private void PreFetchMonsters()
     {
+
         for (int i = 0; i < prefetchCount; i++)
         {
             // 위치·회전은 임시로 (0,0,0)에 두고, 바로 비활성화 처리
@@ -58,7 +77,7 @@ public class GateCtrl : MonoBehaviour
             monsterObj.SetActive(true);
 
             // 만약 Monster 컴포넌트에서 추가로 초기화해야 한다면
-            Monster monster = monsterObj.GetComponent<Monster>();
+            UnitCtrl monster = monsterObj.GetComponent<UnitCtrl>();
             if (monster != null)
             {
                 monster.ResetStats(); // 혹은 다른 초기화 로직

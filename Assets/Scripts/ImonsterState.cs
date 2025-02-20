@@ -1,19 +1,25 @@
-public interface IMonsterState
+public interface IUnitState
 {
-    void PlayState(MonsterCtrl monster);
-    void UpdateState(MonsterCtrl monster);
+    /// <summary>
+    /// 상태 실행
+    /// </summary>
+    void PlayState(UnitCtrl monster);
+
+
+    void UpdateState(UnitCtrl monster);
 }
-public class CityAitState : IMonsterState
+public class CityAitState : IUnitState
 {
-    public void PlayState(MonsterCtrl monster)
+    public void PlayState(UnitCtrl monster)
     {
         monster.Agent.speed = monster.patrolSpeed;
         monster.MoveToNextPatrolPoint();
     }
 
-    public void UpdateState(MonsterCtrl monster)
+    public void UpdateState(UnitCtrl monster)
     {
-        if (!monster.Agent.pathPending && monster.Agent.remainingDistance < 0.5f)
+        if (monster.Agent.pathPending == false && //NavMeshAgent.pathPending 경로 계산이 진행 중 확인용
+            monster.Agent.remainingDistance < 0.5f) // Agent.remainingDistance 목표까지 남은거리
         {
             monster.MoveToNextPatrolPoint();
         }
@@ -24,18 +30,18 @@ public class CityAitState : IMonsterState
         }
     }
 }
-public class ChaseState : IMonsterState
+public class ChaseState : IUnitState
 {
-    public void PlayState(MonsterCtrl monster)
+    public void PlayState(UnitCtrl monster)
     {
         monster.Agent.speed = monster.chaseSpeed;
     }
 
-    public void UpdateState(MonsterCtrl monster)
+    public void UpdateState(UnitCtrl monster)
     {
         if (monster.IsPlayerInChaseRange())
         {
-            monster.Agent.SetDestination(monster.Player.position);
+            monster.Agent.SetDestination(monster.Target.position);
         }
         else
         {
@@ -43,14 +49,14 @@ public class ChaseState : IMonsterState
         }
     }
 }
-public class AttackState : IMonsterState
+public class AttackState : IUnitState
 {
-    public void PlayState(MonsterCtrl monster)
+    public void PlayState(UnitCtrl monster)
     {
         monster.AttackPlayer();
     }
 
-    public void UpdateState(MonsterCtrl monster)
+    public void UpdateState(UnitCtrl monster)
     {
         if (!monster.IsPlayerInChaseRange())
         {

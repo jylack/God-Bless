@@ -1,24 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.UI.CanvasScaler;
 
 // -------------------------------------------------------
 // GOD : 전체 게임을 관리하는 매니저 느낌의 클래스
 // -------------------------------------------------------
 public class GOD : MonoBehaviour
 {
+    public GameObject test;
+
     [Header("신 전용 스킬 관리 객체")]
     public GodSkill godSkill;
 
-    [Header("현재 존재하는 유닛 목록")]
-    public List<Hunter> listUnit = new List<Hunter>();
+    [Header("현재 계약된 헌터 목록")]
+    public List<UnitCtrl> listUnit = new List<UnitCtrl>();
 
     [Header("현재 존재하는 몬스터 목록")]
-    public List<MonsterCtrl> listMonster = new List<MonsterCtrl>();
+    public List<UnitCtrl> listMonster = new List<UnitCtrl>();
 
-    [Header("현재 부여된 스킬 목록")]
+    [Header("현재 부여 할 수 있는 스킬 목록")]
     public List<GrantSkill> listGrantSkill = new List<GrantSkill>();
+
+
+
 
     private void Start()
     {
@@ -29,14 +33,23 @@ public class GOD : MonoBehaviour
         }
 
         // 예시: 게임 시작 시 유닛 2마리 생성
-        godSkill.UnitCreate(this, "HunterA");
-        godSkill.UnitCreate(this, "HunterB");
+        //godSkill.UnitCreate(this, "HunterA");
+        //godSkill.UnitCreate(this, "HunterB");
     }
 
     private void Update()
     {
         // 게임 전체 로직(승패 판정, 스킬 쿨타임 관리 등)을 업데이트
-        // TODO: 구현
+        //StartCoroutine(TestCorootine());
+    }
+
+    //2초당 객체생성
+    IEnumerator TestCorootine()
+    {
+
+        yield return new WaitForSeconds(2);
+        Instantiate(test,transform);
+
     }
 
     // 예시: 모든 몬스터에게 광역 디버프를 걸고 싶을 때
@@ -64,15 +77,15 @@ public class GodSkill
     {
         // 실제로는 프리팹 Instantiate를 통해 유닛 GameObject를 생성하는 식으로 구현 가능
         GameObject unitGO = new GameObject(unitName);
-        Hunter newUnit = unitGO.AddComponent<Hunter>();
+        UnitCtrl newUnit = unitGO.AddComponent<UnitCtrl>();
 
         // 유닛 초기 스탯 설정 (예시)
-        newUnit.MaxHP = 100;
-        newUnit.HP = 100;
-        newUnit.Atk = 10;
-        newUnit.MAtk = 5;
-        newUnit.Def = 5;
-        newUnit.inGate = false;
+        newUnit.maxHp = 100;
+        newUnit.hp = 100;
+        newUnit.atk = 10;
+        newUnit.magicAtk = 5;
+        newUnit.def = 5;
+        newUnit.isGate = false;
 
         // GOD 매니저에 등록
         god.listUnit.Add(newUnit);
@@ -106,12 +119,12 @@ public class GodSkill
     public void AllDeBuff(GOD god)
     {
         // 예시: 몬스터들의 공격/방어를 일시적으로 50% 감소
-        foreach (MonsterCtrl monster in god.listMonster)
+        foreach (UnitCtrl monster in god.listMonster)
         {
             // TODO: 실제 디버프 로직(버프 지속 시간, 중첩 등)을 구현
-            monster.Atk *= 0.5f;
-            monster.Matk *= 0.5f;
-            monster.Def *= 0.5f;
+            //monster.atk *= 0.5f;
+            //monster.magicAtk *= 0.5f;
+            //monster.def *= 0.5f;
         }
         Debug.Log("[GodSkill] 모든 몬스터에게 광역 디버프 적용");
     }
@@ -120,12 +133,12 @@ public class GodSkill
     public void AllBuff(GOD god)
     {
         // 예시: 유닛들의 공격/방어를 일시적으로 150% 증가
-        foreach (Hunter unit in god.listUnit)
+        foreach (UnitCtrl unit in god.listUnit)
         {
             // TODO: 실제 버프 로직(버프 지속 시간, 중첩 등)을 구현
-            unit.Atk *= 1.5f;
-            unit.MAtk *= 1.5f;
-            unit.Def *= 1.5f;
+            //unit.atk *= 1.5f;
+            //unit.magicAtk *= 1.5f;
+            //unit.def *= 1.5f;
         }
         Debug.Log("[GodSkill] 모든 유닛에게 광역 버프 적용");
     }

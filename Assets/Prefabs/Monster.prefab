@@ -143,8 +143,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08dee08ce89bfea4dae2e4beb5c7eba3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  patrolPoints: []
-  player: {fileID: 0}
+  type: 0
+  level: 0
+  maxHp: 0
+  hp: 0
+  atk: 0
+  magicAtk: 0
+  def: 0
+  magicDef: 0
+  isGate: 0
+  chaseSpeed: 5
   chaseRange: 10
   patrolSpeed: 3.5
-  chaseSpeed: 5
+  skills: 
+  patrolPoints: []

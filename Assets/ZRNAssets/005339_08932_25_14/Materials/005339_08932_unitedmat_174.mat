@@ -50,7 +50,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _Cull: 2
-    - _Glossiness: 0.6
+    - _Glossiness: 0.947
     - _Metallic: 0.2
     - _NormalStrength1: 0.12
     - _NormalStrength2: 0.8

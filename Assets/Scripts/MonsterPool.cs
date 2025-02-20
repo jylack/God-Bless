@@ -51,7 +51,7 @@ public class MonsterPool : MonoBehaviour
         monsterObj.SetActive(true);
 
         // 몬스터 스탯 초기화 (예시)
-        Monster monster = monsterObj.GetComponent<Monster>();
+        UnitCtrl monster = monsterObj.GetComponent<UnitCtrl>();
         if (monster != null)
         {
             monster.ResetStats();
