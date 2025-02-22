@@ -8,7 +8,7 @@ using UnityEngine.AI;
 public enum UnitType { Monster, Hunter }
 
 public class UnitCtrl : MonoBehaviour
-{    
+{
 
     public IUnitState currentState;  // 현재 상태
     public NavMeshAgent Agent { get; private set; }
@@ -23,7 +23,7 @@ public class UnitCtrl : MonoBehaviour
     public int def;
     public int magicDef;
     public bool isGate;
-
+    
     public float chaseSpeed = 5f;
     public float chaseRange = 10f; //추격 범위
     public float patrolSpeed = 2f;
@@ -50,17 +50,22 @@ public class UnitCtrl : MonoBehaviour
 
     private void Start()
     {
-        //var WayPos = GameObject.Find("WayPoint_C").GetComponentsInChildren<Transform>();
-        
-        //foreach (var pos in WayPos)
-        //{
-        //    Debug.Log(pos.position);
-        //    patrolPoints.Add(pos.position);
-        //}
+        var obj = GameObject.Find("WayPoint_C");
+        var WayPos = obj.GetComponentsInChildren<Transform>();
 
+        foreach (var pos in WayPos)
+        {
+            //Debug.Log(pos.position);
+            if (obj.name != pos.name)
+            {
+                patrolPoints.Add(pos.position);
+            }
+        }
+
+        //Agent.autoRepath = true;
         //target = GameObject.FindWithTag("Player")?.transform;//테스트용 추후 Hunter로 바꿀예정
 
-        //ChangeState(new CityAitState()); // 초기 상태 = 순찰
+        ChangeState(new CityAitState()); // 초기 상태 = 순찰
         //Debug.Log(patrolPoints.Count);
     }
 

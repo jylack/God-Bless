@@ -11,7 +11,7 @@ public class MonsterSpawner : MonoBehaviour
     [Header("오브젝트 풀에서 미리 받을 몬스터 수")]
     public int prefetchCount = 5;
 
-    [Header("몬스터 스폰 위치 Offset (예시)")]
+    [Header("몬스터 스폰 위치")]
     public Vector3 spawnOffset = new Vector3(0, 0, 2);
 
     // 미리 받아놓은 몬스터들을 저장할 리스트
@@ -34,6 +34,8 @@ public class MonsterSpawner : MonoBehaviour
     {
         // 게임 시작(또는 게이트 생성 시) 원하는 수만큼 풀에서 몬스터를 미리 가져옴
         PreFetchMonsters();
+        //임시로 게이트 열리자마자 소환되는지 확인코드
+        SpawnMonsters();
     }
 
     /// <summary>
