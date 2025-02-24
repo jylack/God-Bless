@@ -14,18 +14,25 @@ public class NeighborhoodCtrl : MonoBehaviour
     List<GateCtrl> gates = new List<GateCtrl>();
     public List<GateCtrl> Gates { set => gates = value; }
 
+    List<Transform> wayPos;
 
     private void Start()
     {
-        var wayPos = GameObject.Find("WayPoints").GetComponent<WayPoints>().GetWayPos(neighborhood);
+        wayPos = GameObject.Find("WayPoints").GetComponent<WayPoints>().GetWayPos(neighborhood);
 
         //가지고 있는 게이트에 지역 세팅
         foreach (var g in gates)
         {
             g.GateSet(wayPos);            
         }
-
     }
+
+    private void FixedUpdate()
+    {
+        SpawnGate(GameManager.Instance.dataBase.gateTypes[0]);
+    }
+
+
     public void SpawnGate(GameObject gatePrefab)
     {
         if (gates.Count >= maxGates) return;
@@ -33,6 +40,7 @@ public class NeighborhoodCtrl : MonoBehaviour
         GameObject gateObj = Instantiate(gatePrefab, GetRandomPosition(), Quaternion.identity);
         GateCtrl gate = gateObj.GetComponent<GateCtrl>();
         gate.SetRegion(this);
+        gate.SetMonster(GameManager.Instance.dataBase.GetMonster(MonsterName.Slime));
         gates.Add(gate);
     }
 
@@ -43,7 +51,7 @@ public class NeighborhoodCtrl : MonoBehaviour
 
     private Vector3 GetRandomPosition()
     {
-        return transform.position + new Vector3(Random.Range(-5, 5), 0, Random.Range(-5, 5));
+        return wayPos[Random.Range(0,wayPos.Count)].position + new Vector3(0,1f,0);
     }
 
 }

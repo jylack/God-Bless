@@ -25,7 +25,9 @@ public class GameManager : MonoBehaviour
     {
         if (Instance == null) Instance = this;
 
+        //구역들 저장
         var objs = GameObject.FindObjectsOfType<NeighborhoodCtrl>();
+        
         foreach(var o in objs)
         {
             allRegions.Add(o);
@@ -33,19 +35,6 @@ public class GameManager : MonoBehaviour
         
     }
 
-
-    public NeighborhoodCtrl GetRandomRegion()
-    {
-        return allRegions[Random.Range(0, allRegions.Count)];
-    }
-
-    public void SpawnGateInRandomRegion()
-    {
-
-        NeighborhoodCtrl targetRegion = Instance.GetRandomRegion();
-        var rnd = Random.Range(0, dataBase.gateTypes.Count);
-        targetRegion.SpawnGate(dataBase.gateTypes[rnd].gameObject);
-    }
 
     /*임시 씬 사용시 전에있던 씬 파괴 안하고 사용하는법
      //씬을 두개 킨다. 현재 있는 씬과 ""의 씬을 킴

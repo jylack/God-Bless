@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.21908012, g: 0.36049104, b: 0.52759993, a: 1}
+  m_IndirectSpecularColor: {r: 0.21930626, g: 0.36044985, b: 0.527937, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -13535,7 +13535,6 @@ GameObject:
   - component: {fileID: 1207146513}
   - component: {fileID: 1207146515}
   - component: {fileID: 1207146514}
-  - component: {fileID: 1207146516}
   m_Layer: 0
   m_Name: Image
   m_TagString: Untagged
@@ -13600,18 +13599,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1207146512}
   m_CullTransparentMesh: 1
---- !u!114 &1207146516
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1207146512}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5a1b383cbf38e7e4baf97bc4821af1e1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1208363648
 GameObject:
   m_ObjectHideFlags: 0
@@ -13785,7 +13772,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   monsterObj:
   - {fileID: 1931298151966786, guid: 928a1377c1cd4515b208fef3a396b8ea, type: 3}
-  hunterDataTypes: []
+  hunterDataTypes:
+  - {fileID: 11400000, guid: 1cfa3e9cc0b723d4cbf1109716b19e93, type: 2}
+  - {fileID: 11400000, guid: 91fdbe459ac122c468af64dbb614890b, type: 2}
+  - {fileID: 11400000, guid: 1a6ba37d85931e34f868dfb595308e13, type: 2}
   gateTypes:
   - {fileID: 3992058561654064293, guid: 2bd2fc039cc2cad4686f1950894f2d77, type: 3}
   listGrantSkill: []
@@ -15700,19 +15690,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1473852079}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1473852082}
-        m_TargetAssemblyTypeName: ButtonCtrl, Assembly-CSharp
-        m_MethodName: BusterCallClick
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1473852082
 MonoBehaviour:
   m_ObjectHideFlags: 0

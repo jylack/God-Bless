@@ -2,10 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public class GOD : MonoBehaviour
 {
-
     [Header("신 전용 스킬 관리 객체")]
     public GodSkill godSkill;
 
@@ -15,82 +13,62 @@ public class GOD : MonoBehaviour
     [Header("현재 부여 할 수 있는 스킬 목록")]
     public List<GrantSkill> listGrantSkill = new List<GrantSkill>();
 
-
-
-
     private void Start()
     {
-        // 시작 시 GodSkill 초기화 (필요하다면)
         if (godSkill == null)
         {
             godSkill = new GodSkill();
         }
-
-
-
-        // 예시: 게임 시작 시 유닛 2마리 생성
-        //godSkill.UnitCreate(this, "HunterA");
-        //godSkill.UnitCreate(this, "HunterB");
     }
 
-    private void Update()
-    {
-        // 게임 전체 로직(승패 판정, 스킬 쿨타임 관리 등)을 업데이트
-        //StartCoroutine(TestCorootine());
-        GameManager.Instance.SpawnGateInRandomRegion();
-    }
-
-    //2초당 객체생성
-    //IEnumerator TestCorootine()
-    //{
-    //    yield return new WaitForSeconds(2);
-    //    Instantiate(test,transform);
-
-    //}
-
-    // 예시: 모든 몬스터에게 광역 디버프를 걸고 싶을 때
+    // 모든 몬스터에 광역 디버프 적용
     public void AllDeBuffMonsters()
     {
-        //TODO: 올 디버프 아직 제작안됬음.
-        //godSkill.AllDeBuff(this);
+        godSkill.AllDeBuff(this);
     }
 
-    // 예시: 모든 유닛에게 광역 버프를 걸고 싶을 때
+    // 모든 헌터에 광역 버프 적용
     public void AllBuffUnits()
     {
         godSkill.AllBuff(this);
     }
 }
 
-// -------------------------------------------------------
-// GodSkill : 신(GOD)이 사용할 수 있는 전용 스킬/기능
-// -------------------------------------------------------
-
 [System.Serializable]
 public class GodSkill
 {
-    // 1. 유닛 생성 (속성 설정, 스킬칸 등)
+    // 1. 유닛 생성 (헌터 생성 및 랜덤 스킬 할당)
     public void UnitCreate(GOD god, string unitName)
     {
-        // 실제로는 프리팹 Instantiate를 통해 유닛 GameObject를 생성하는 식으로 구현 가능
         GameObject unitGO = new GameObject(unitName);
+        // UnitCtrl 추가
         UnitCtrl newUnit = unitGO.AddComponent<UnitCtrl>();
+        //Hunter 컴포넌트도 추가
+        if (newUnit.data != null)
+        {
+            unitGO.AddComponent<Hunter>();
+        }
 
-        // 유닛 초기 스탯 설정 (예시)
-        //newUnit.maxHp = 100;
-        //newUnit.hp = 100;
-        //newUnit.atk = 10;
-        //newUnit.magicAtk = 5;
-        //newUnit.def = 5;
-        //newUnit.isGate = false;
+        // 데이터베이스에서 랜덤 스킬 할당
+        DataBase db = GameObject.FindObjectOfType<DataBase>();
+        if (db != null && db.listGrantSkill.Count > 0)
+        {
+            int randIndex = Random.Range(0, db.listGrantSkill.Count);
+            GrantSkill randomSkill = db.listGrantSkill[randIndex];
+            // Hunter 컴포넌트가 있다면 스킬 할당
+            Hunter hunterComp = unitGO.GetComponent<Hunter>();
+            if (hunterComp != null)
+            {
+                hunterComp.skill = randomSkill;
+                randomSkill.targetUnit = hunterComp;
+            }
+        }
 
-        // GOD 매니저에 등록
         god.listUnit.Add(newUnit);
-
         Debug.Log($"[GodSkill] 새로운 유닛 생성: {unitName}");
     }
 
-    // 2. 특정 유닛에게 스킬 부여
+    // 2. 특정 헌터에게 스킬 부여
     public void AllocateSkill(GOD god, Hunter targetUnit, GrantSkill skill)
     {
         if (targetUnit == null || skill == null)
@@ -98,62 +76,73 @@ public class GodSkill
             Debug.LogWarning("[GodSkill] AllocateSkill 실패: 대상 또는 스킬이 null");
             return;
         }
-        // 스킬 부여
         targetUnit.skill = skill;
-        // 스킬이 참조하는 유닛도 설정
         skill.targetUnit = targetUnit;
-
-        // GOD 매니저에 부여된 스킬 목록에 추가
         if (!god.listGrantSkill.Contains(skill))
         {
             god.listGrantSkill.Add(skill);
         }
-
         Debug.Log($"[GodSkill] {targetUnit.gameObject.name}에게 스킬 [{skill.skillName}] 부여");
     }
 
-    // 3. 광역 디버프 (현재 필드(도시)에 있는 몬스터들에게 방어력 감소, 공격력 감소 등)
-    //public void AllDeBuff(GOD god)
-    //{
-    //    // 예시: 몬스터들의 공격/방어를 일시적으로 50% 감소
-    //    foreach (UnitCtrl monster in god.listMonster)
-    //    {
-    //        // TODO: 실제 디버프 로직(버프 지속 시간, 중첩 등)을 구현
-    //        //monster.atk *= 0.5f;
-    //        //monster.magicAtk *= 0.5f;
-    //        //monster.def *= 0.5f;
-    //    }
-    //    Debug.Log("[GodSkill] 모든 몬스터에게 광역 디버프 적용");
-    //}
+    // 3. 광역 디버프: 모든 필드 몬스터의 스탯을 50%로 감소 (지속시간 10초)
+    public void AllDeBuff(GOD god)
+    {
+        foreach (GameObject monsterObj in GameManager.Instance.listMonster)
+        {
+            UnitCtrl monster = monsterObj.GetComponent<UnitCtrl>();
+            if (monster != null && monster.Type == UnitType.Monster)
+            {
+                monster.ApplyDebuff(0.5f, 10f);
+            }
+        }
+        Debug.Log("[GodSkill] 모든 몬스터에게 광역 디버프 적용");
+    }
 
-    // 4. 광역 버프 (현재 필드(도시)에 있는 유닛들에게 방어력 증가, 공격력 증가 등)
+    // 4. 광역 버프: 모든 헌터 유닛의 스탯을 150%로 증가 (지속시간 10초)
     public void AllBuff(GOD god)
     {
-        // 예시: 유닛들의 공격/방어를 일시적으로 150% 증가
         foreach (UnitCtrl unit in god.listUnit)
         {
-            // TODO: 실제 버프 로직(버프 지속 시간, 중첩 등)을 구현
-            //unit.atk *= 1.5f;
-            //unit.magicAtk *= 1.5f;
-            //unit.def *= 1.5f;
+            if (unit != null && unit.Type == UnitType.Hunter)
+            {
+                unit.ApplyBuff(1.5f, 10f);
+            }
         }
         Debug.Log("[GodSkill] 모든 유닛에게 광역 버프 적용");
     }
+
+    // 5.UI에서 뽑기를 통해 스킬을 추가하는 메서드
+    public void DrawSkill(GOD god)
+    {
+        DataBase db = GameObject.FindObjectOfType<DataBase>();
+        if (db == null || db.listGrantSkill.Count == 0)
+        {
+            Debug.LogWarning("DrawSkill: 데이터베이스에 스킬 목록이 없습니다.");
+            return;
+        }
+        int index = Random.Range(0, db.listGrantSkill.Count);
+        GrantSkill drawnSkill = db.listGrantSkill[index];
+
+        // 새로운 인스턴스로 복사하여 추가 (참조 공유 방지)
+        GrantSkill newSkill = new GrantSkill();
+        newSkill.skillName = drawnSkill.skillName;
+        newSkill.usageLimit = drawnSkill.usageLimit;
+        newSkill.isActive = drawnSkill.isActive;
+
+        god.listGrantSkill.Add(newSkill);
+        Debug.Log($"DrawSkill: {newSkill.skillName} 스킬을 뽑아 GOD의 스킬 목록에 추가했습니다.");
+    }
 }
 
-// -------------------------------------------------------
-// GrantSkill : 부여 스킬 정보 (예: 거리유리, 광역마, 번개 등)
-// -------------------------------------------------------
 [System.Serializable]
 public class GrantSkill
 {
     public string skillName;      // 스킬 이름
-    public Hunter targetUnit;       // 어떤 유닛에게 부여되었는가
-    public int usageLimit = 3;    // 사용 가능 횟수 등
-    public bool isActive = false; // 발동 중인지 여부
+    public Hunter targetUnit;       // 부여된 헌터
+    public int usageLimit = 3;    // 사용 가능 횟수
+    public bool isActive = false; // 발동 중 여부
 
-    // 스킬 발동 조건, 횟수 제한, 쿨타임 등 다양한 로직을 여기에 구현 가능
-    // 예시: 스킬 발동
     public void ActivateSkill()
     {
         if (usageLimit <= 0)
@@ -164,11 +153,9 @@ public class GrantSkill
         isActive = true;
         usageLimit--;
         Debug.Log($"[GrantSkill] 스킬 [{skillName}] 발동! 남은 사용 횟수: {usageLimit}");
-
-        // TODO: 실제 스킬 효과(데미지, 버프, 디버프 등) 구현
+        // TODO: 실제 스킬 효과 구현
     }
 
-    // 스킬 비활성화
     public void DeactivateSkill()
     {
         isActive = false;
