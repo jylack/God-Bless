@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -10,42 +11,101 @@ public enum UnitType { Monster, Hunter }
 public class UnitCtrl : MonoBehaviour
 {
 
-    public IUnitState currentState;  // 현재 상태
-    public NavMeshAgent Agent { get; private set; }
+    //값 주고받을떄 어찌할지는 조금더 고민해보자.
+    //[Header("유닛 기본 속성")]
+    public UnitData data;
+    private UnitType type;
+    private string unitName;
+    private int level;
+    private float maxHp;
+    private float hp;
+    private int atk;
+    private int magicAtk;
+    private int def;
+    private int magicDef;
+    private bool isGate;
+    private List<SkillData> skills;
+    private IUnitState currentState;  // 현재 상태
 
-    [Header("유닛 기본 속성")]
-    public UnitType type;
-    public int level;
-    public float maxHp;
-    public float hp;
-    public int atk;
-    public int magicAtk;
-    public int def;
-    public int magicDef;
-    public bool isGate;
+
+    //[Header("네비메쉬 설정")]
+    private float chaseSpeed ;
+    private float chaseRange ;
+    private float patrolSpeed;
     
-    public float chaseSpeed = 5f;
-    public float chaseRange = 10f; //추격 범위
-    public float patrolSpeed = 2f;
-
-
-
-    public List<SkillType> skills;
-
+    public bool leader;
+    public NavMeshAgent Agent { get; private set; }
     int currentPatrolPosIndex;//현재 순찰좌표 인덱스
     //vec3으로 할랬는데... 드롭드래그가 안되서 임시로 GameObj로 만듬.
     //추후 지역 배정받을때 start나 awake에서 지역별 좌표지정 따로 만들어야할듯.
     public List<Vector3> patrolPoints = new List<Vector3>();//순찰 좌표
 
     private Transform target;
+
+    //프로퍼티
+    public List<SkillData> Skills { get => skills; }
+
     public Transform Target { get => target; }
 
+    public UnitType Type { get => type;  }
+
+    public string UnitName { get => unitName; }
+
+    public int Level { get => level; }
+
+    public float MaxHp { get => maxHp; }
+    public float Hp { get => hp; }
+    public int Atk { get => atk; }
+    public int MagicAtk { get => magicAtk; }
+    public int Def { get => def; }
+    public int MagicDef { get => magicDef; }
+
+    public bool IsGate { get => isGate; }
+
+    public float ChaseSpeed { get => chaseSpeed;  }
+    public float ChaseRange { get => chaseRange; }
+    public float PatrolSpeed { get => patrolSpeed; }
+
+    void UnitSetting(UnitData data)
+    {
+        if(data == null)
+        {
+            Debug.LogError("데이터가 없습니다.");
+            return;
+        }
+
+        type = data.unitType;
+        
+        unitName = data.unitName;
+        
+        level = data.level;
+
+        maxHp = data.maxHp;
+        hp = maxHp;
+        atk = data.atk;
+        magicAtk = data.magicAtk;
+        def = data.def;
+        magicDef = data.magicDef;
+        isGate = true;
+        
+        skills = data.skills;
+
+        chaseSpeed = data.chaseSpeed;
+        chaseRange = data.chaseRange;
+        patrolSpeed = data.patrolSpeed;
+    }
 
     private void Awake()
     {
         currentPatrolPosIndex = 0;
         Agent = GetComponent<NavMeshAgent>();
+        
+        UnitSetting(data);
+    }
 
+    public void SetLeader(bool select)
+    {
+        leader = select;
     }
 
     private void Start()

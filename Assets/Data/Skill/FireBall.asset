@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 909836884fe0ab94ba2f9439d5ac924d, type: 3}
+  m_Name: FireBall
+  m_EditorClassIdentifier: 
+  obj: {fileID: 0}
+  type: 0
+  skillName: 
+  level: 0
+  coolTime: 0
+  delay: 0
+  activeTime: 0
+  maxHp: 0
+  atk: 0
+  magicAtk: 0
+  def: 0
+  magicDef: 0
+  speed: 0
+  targetPos: {x: 0, y: 0, z: 0}

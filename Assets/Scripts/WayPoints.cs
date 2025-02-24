@@ -15,18 +15,10 @@ public class WayPoints : MonoBehaviour
     public List<Transform> PosH = new List<Transform>();
     public List<Transform> PosI = new List<Transform>();
 
-    
-    //public List<List<Transform>> posAll;
-
-    //private void Awake()
-    //{
-    //    //posAll = new List<List<Transform>> { PosA, PosB, PosC, PosD, PosD, PosE, PosF, PosG, PosH, PosI };        
-    //}
-
     public List<Transform> GetWayPos(Gate_Way_Group index)
     {
         List<Transform> temp = new List<Transform>();
-
+        
         switch (index)
         {
             case Gate_Way_Group.A:

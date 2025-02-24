@@ -12,7 +12,7 @@ public class CityAitState : IUnitState
 {
     public void PlayState(UnitCtrl monster)
     {
-        monster.Agent.speed = monster.patrolSpeed;
+        monster.Agent.speed = monster.PatrolSpeed;
         monster.MoveToNextPatrolPoint();
     }
 
@@ -34,7 +34,7 @@ public class ChaseState : IUnitState
 {
     public void PlayState(UnitCtrl monster)
     {
-        monster.Agent.speed = monster.chaseSpeed;
+        monster.Agent.speed = monster.ChaseSpeed;
     }
 
     public void UpdateState(UnitCtrl monster)

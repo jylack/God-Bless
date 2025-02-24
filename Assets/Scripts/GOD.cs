@@ -2,21 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// -------------------------------------------------------
-// GOD : 전체 게임을 관리하는 매니저 느낌의 클래스
-// -------------------------------------------------------
+
 public class GOD : MonoBehaviour
 {
-    public GameObject test;
 
     [Header("신 전용 스킬 관리 객체")]
     public GodSkill godSkill;
 
     [Header("현재 계약된 헌터 목록")]
     public List<UnitCtrl> listUnit = new List<UnitCtrl>();
-
-    [Header("현재 존재하는 몬스터 목록")]
-    public List<UnitCtrl> listMonster = new List<UnitCtrl>();
 
     [Header("현재 부여 할 수 있는 스킬 목록")]
     public List<GrantSkill> listGrantSkill = new List<GrantSkill>();
@@ -32,6 +26,8 @@ public class GOD : MonoBehaviour
             godSkill = new GodSkill();
         }
 
+
+
         // 예시: 게임 시작 시 유닛 2마리 생성
         //godSkill.UnitCreate(this, "HunterA");
         //godSkill.UnitCreate(this, "HunterB");
@@ -41,21 +37,22 @@ public class GOD : MonoBehaviour
     {
         // 게임 전체 로직(승패 판정, 스킬 쿨타임 관리 등)을 업데이트
         //StartCoroutine(TestCorootine());
+        GameManager.Instance.SpawnGateInRandomRegion();
     }
 
     //2초당 객체생성
-    IEnumerator TestCorootine()
-    {
+    //IEnumerator TestCorootine()
+    //{
+    //    yield return new WaitForSeconds(2);
+    //    Instantiate(test,transform);
 
-        yield return new WaitForSeconds(2);
-        Instantiate(test,transform);
-
-    }
+    //}
 
     // 예시: 모든 몬스터에게 광역 디버프를 걸고 싶을 때
     public void AllDeBuffMonsters()
     {
-        godSkill.AllDeBuff(this);
+        //TODO: 올 디버프 아직 제작안됬음.
+        //godSkill.AllDeBuff(this);
     }
 
     // 예시: 모든 유닛에게 광역 버프를 걸고 싶을 때
@@ -80,12 +77,12 @@ public class GodSkill
         UnitCtrl newUnit = unitGO.AddComponent<UnitCtrl>();
 
         // 유닛 초기 스탯 설정 (예시)
-        newUnit.maxHp = 100;
-        newUnit.hp = 100;
-        newUnit.atk = 10;
-        newUnit.magicAtk = 5;
-        newUnit.def = 5;
-        newUnit.isGate = false;
+        //newUnit.maxHp = 100;
+        //newUnit.hp = 100;
+        //newUnit.atk = 10;
+        //newUnit.magicAtk = 5;
+        //newUnit.def = 5;
+        //newUnit.isGate = false;
 
         // GOD 매니저에 등록
         god.listUnit.Add(newUnit);
@@ -116,18 +113,18 @@ public class GodSkill
     }
 
     // 3. 광역 디버프 (현재 필드(도시)에 있는 몬스터들에게 방어력 감소, 공격력 감소 등)
-    public void AllDeBuff(GOD god)
-    {
-        // 예시: 몬스터들의 공격/방어를 일시적으로 50% 감소
-        foreach (UnitCtrl monster in god.listMonster)
-        {
-            // TODO: 실제 디버프 로직(버프 지속 시간, 중첩 등)을 구현
-            //monster.atk *= 0.5f;
-            //monster.magicAtk *= 0.5f;
-            //monster.def *= 0.5f;
-        }
-        Debug.Log("[GodSkill] 모든 몬스터에게 광역 디버프 적용");
-    }
+    //public void AllDeBuff(GOD god)
+    //{
+    //    // 예시: 몬스터들의 공격/방어를 일시적으로 50% 감소
+    //    foreach (UnitCtrl monster in god.listMonster)
+    //    {
+    //        // TODO: 실제 디버프 로직(버프 지속 시간, 중첩 등)을 구현
+    //        //monster.atk *= 0.5f;
+    //        //monster.magicAtk *= 0.5f;
+    //        //monster.def *= 0.5f;
+    //    }
+    //    Debug.Log("[GodSkill] 모든 몬스터에게 광역 디버프 적용");
+    //}
 
     // 4. 광역 버프 (현재 필드(도시)에 있는 유닛들에게 방어력 증가, 공격력 증가 등)
     public void AllBuff(GOD god)

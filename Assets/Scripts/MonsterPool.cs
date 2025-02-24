@@ -29,6 +29,8 @@ public class MonsterPool : MonoBehaviour
             newObj.SetActive(false);
             poolQueue.Enqueue(newObj);
         }
+
+        
     }
 
     public GameObject GetMonster(Vector3 position, Quaternion rotation)
