@@ -51,7 +51,9 @@ public class NeighborhoodCtrl : MonoBehaviour
 
     private Vector3 GetRandomPosition()
     {
-        return wayPos[Random.Range(0,wayPos.Count)].position + new Vector3(0,1f,0);
+        var rndIndex = Random.Range(0, wayPos.Count);
+
+        return wayPos[rndIndex].position + new Vector3(0,1f,0);
     }
 
 }

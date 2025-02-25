@@ -14631,6 +14631,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b49b6990539c3147be56f2a0ab197fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gateLevel: 1
+  neighborhood: {fileID: 0}
+  monsterPrefab: {fileID: 0}
+  explosionTime: 30
   gateClass: 8
   prefetchCount: 10
   spawnOffset: {x: 0, y: 0, z: 2}

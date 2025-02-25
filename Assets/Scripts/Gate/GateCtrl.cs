@@ -7,7 +7,7 @@ public enum Gate_Way_Group
     A, B, C, D, E, F, G, H, I, end
 }
 
-public enum Gate_Class { A, B, C, D, E, F, G, H, I, end }
+public enum Gate_Class { F, E, D, C, B, A, S, SS, SSS, end }
 
 
 public class GateCtrl : MonoBehaviour
@@ -54,22 +54,15 @@ public class GateCtrl : MonoBehaviour
 
     public void ExplodeGate()
     {
-        int monsterCount = GetMonsterSpawnCount();
-        for (int i = 0; i < monsterCount; i++)
+        //int monsterCount = GetMonsterSpawnCount();
+        for (int i = 0; i < prefetchCount; i++)
         {
-            Instantiate(monsterPrefab, transform.position + new Vector3(i, 0, 0), Quaternion.identity);
+            Instantiate(monsterPrefab, transform.position + new Vector3(i, 0, 0), Quaternion.identity,GameManager.Instance.MonsterOBJ.transform);
         }
 
         neighborhood.RemoveGate(this);
         Destroy(gameObject);
     }
-
-    private int GetMonsterSpawnCount()
-    {
-        int levelDifference = gateLevel - neighborhood.nei_level;
-        return Mathf.Max(1, 1 + levelDifference);
-    }
-
 
     /// <summary>
     /// 지정된 순찰좌표 세팅할 메서드

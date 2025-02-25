@@ -19,7 +19,11 @@ public class GameManager : MonoBehaviour
 
 
     public static GameManager Instance;
+    
     public List<NeighborhoodCtrl> allRegions = new List<NeighborhoodCtrl>();
+
+
+    public GameObject MonsterOBJ;
 
     private void Awake()
     {
@@ -27,12 +31,15 @@ public class GameManager : MonoBehaviour
 
         //구역들 저장
         var objs = GameObject.FindObjectsOfType<NeighborhoodCtrl>();
-        
+        MonsterOBJ = GameObject.Find("Monster");
+
         foreach(var o in objs)
         {
             allRegions.Add(o);
         }
+
         
+        GateManager.Instance.SpawnAllRegions();
     }
 
 

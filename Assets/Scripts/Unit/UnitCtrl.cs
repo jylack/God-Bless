@@ -162,11 +162,6 @@ public class UnitCtrl : MonoBehaviour
         Debug.Log("몬스터가 플레이어를 공격!");
     }
 
-    public void ResetStats()
-    {
-        // 재설정 로직 (필요 시 구현)
-    }
-
 
     // 외부에서 타겟을 지정하고 추격 상태로 전환하는 메서드
     public void SetTarget(Transform newTarget)
