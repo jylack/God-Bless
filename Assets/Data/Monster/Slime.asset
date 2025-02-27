@@ -12,17 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62de235365b8d404ca199abb46364f12, type: 3}
   m_Name: Slime
   m_EditorClassIdentifier: 
-  unitType: 0
-  skills: []
-  patrolPoints: []
-  chaseRange: 10
-  chaseSpeed: 5
-  patrolSpeed: 3.5
   unitName: Slime
+  unitType: 1
   level: 1
-  exp: 10
   maxHp: 100
   atk: 5
   magicAtk: 0
   def: 0
   magicDef: 0
+  chaseSpeed: 5
+  chaseRange: 10
+  patrolSpeed: 3.5
+  attackRange: 0
+  skills: []

@@ -9,10 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 909836884fe0ab94ba2f9439d5ac924d, type: 3}
-  m_Name: FireBall
+  m_Script: {fileID: 11500000, guid: 387ec74b27c85c246bba6158f074e92d, type: 3}
+  m_Name: Green
   m_EditorClassIdentifier: 
-  skillName: Fire Ball
-  damageMultiplier: 0
-  cooldown: 0
-  effectDuration: 0
+  gateName: Green
+  gateClass: 0
+  spawnableMonsters:
+  - {fileID: 11400000, guid: cb23d979e86539243b4265a3e9eeecf6, type: 2}
+  monsterSpawnCount: 10

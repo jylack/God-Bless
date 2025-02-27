@@ -12,17 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62de235365b8d404ca199abb46364f12, type: 3}
   m_Name: IntellectScore
   m_EditorClassIdentifier: 
-  unitType: 1
-  skills: []
-  patrolPoints: []
-  chaseRange: 30
-  chaseSpeed: 5
-  patrolSpeed: 3.5
   unitName: "\uC9C0\uB2A5\uD30C"
+  unitType: 0
   level: 1
-  exp: 0
   maxHp: 100
   atk: 5
   magicAtk: 20
   def: 0
   magicDef: 0
+  chaseSpeed: 5
+  chaseRange: 30
+  patrolSpeed: 3.5
+  attackRange: 0
+  skills: []

@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: -7164009289689793882}
   m_Layer: 0
   m_Name: Hunter
-  m_TagString: Untagged
+  m_TagString: Hunter
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -144,4 +144,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   data: {fileID: 11400000, guid: 1cfa3e9cc0b723d4cbf1109716b19e93, type: 2}
-  patrolPoints: []

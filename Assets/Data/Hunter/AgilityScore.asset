@@ -12,17 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62de235365b8d404ca199abb46364f12, type: 3}
   m_Name: AgilityScore
   m_EditorClassIdentifier: 
-  unitType: 1
-  skills: []
-  patrolPoints: []
-  chaseRange: 20
-  chaseSpeed: 3
-  patrolSpeed: 5
   unitName: "\uBBFC\uCCA9\uD30C"
+  unitType: 0
   level: 1
-  exp: 0
   maxHp: 100
   atk: 10
   magicAtk: 0
   def: 0
   magicDef: 0
+  chaseSpeed: 3
+  chaseRange: 20
+  patrolSpeed: 5
+  attackRange: 0
+  skills: []

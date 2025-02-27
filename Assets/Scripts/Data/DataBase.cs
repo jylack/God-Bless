@@ -2,47 +2,88 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum MonsterName
-{
-    Slime, end
-}
-
-/// <summary>
-/// 모든 오브젝트 종류 가지고 있을 클래스
-/// 모든 오브젝트 종류의 풀을 가지고 있을 클래스
-/// </summary>
 public class DataBase : MonoBehaviour
 {
-    
-    [Header("몬스터 종류별 데이터 목록")]//등급별 몬스터
-    public List<GameObject> monsterObj = new List<GameObject>();
-        
-    [Header("헌터 종류별 데이터 목록")]
-    public List<UnitData> hunterDataTypes = new List<UnitData>();
-    
-    [Header("게이트 종류 목록")]//등급별 몬스터가 나오는 등급별 게이트.
-    public List<GameObject> gateTypes = new List<GameObject>();    
-    
-    [Header("부여 할 수 있는 스킬 목록")]
-    public List<GrantSkill> listGrantSkill = new List<GrantSkill>();
 
-    /// <summary>
-    /// 세팅된 몬스터 목록중 하나 반환
-    /// </summary>
-    /// <param name="name">원하는 몬스터 종류 이름 입력</param>
-    /// <returns></returns>
-    public GameObject GetMonster(MonsterName name)
+    [Header("헌터 데이터 파일")]
+    public List<UnitData> hunterDataFiles;
+
+    [Header("몬스터 데이터 파일")]
+    public List<UnitData> monsterDataFiles;
+
+
+    [Header("게이트 데이터 파일")]
+    public List<GateData> gateDataFiles;
+
+    [Header("스킬 데이터 파일")]
+    public List<SkillData> skillDataFiles;
+
+    private Dictionary<Gate_Class, GateData> gateDataCache = new Dictionary<Gate_Class, GateData>();
+    private Dictionary<string, UnitData> unitDataCache = new Dictionary<string, UnitData>();
+    private List<SkillData> cachedSkills = new List<SkillData>();
+    //    public string CurrentRegion => currentRegion;
+    private void Awake()
     {
-        return monsterObj[(int)name];
+        
     }
 
-    //public UnitData GetData(UnitType type)
-    //{
-    //    if(type == UnitType.Hunter)
-    //    {
-    //        return 
-    //    }
-    //}
+    public UnitData GetHunterData(string name)
+    {
+        return hunterDataFiles.Find(h => h.unitName == name);
+    }
+
+    public UnitData GetMonsterData(string name)
+    {
+        return monsterDataFiles.Find(m => m.unitName == name);
+    }
+
+    /// <summary>
+    /// 랜덤 헌터 반환 (헌터 생성용)
+    /// </summary>
+    public UnitData GetRandomHunter()
+    {
+        if (hunterDataFiles.Count == 0) return null;
+        return hunterDataFiles[Random.Range(0, hunterDataFiles.Count)];
+    }
+
+    /// <summary>
+    /// 랜덤 몬스터 반환 (게이트 스폰용)
+    /// </summary>
+    public UnitData GetRandomMonster()
+    {
+        if (monsterDataFiles.Count == 0) return null;
+        return monsterDataFiles[Random.Range(0, monsterDataFiles.Count)];
+    }
 
 
+    public GateData GetGateData(Gate_Class gateClass)
+    {
+        if (gateDataCache.TryGetValue(gateClass, out GateData data))
+        {
+            return data;
+        }
+        Debug.LogWarning($"[DataBase] {gateClass} 등급의 게이트 데이터 없음.");
+        return null;
+    }
+
+
+    public UnitData GetUnitData(string name)
+    {
+        if (unitDataCache.TryGetValue(name, out UnitData data))
+        {
+            return data;
+        }
+        Debug.LogWarning($"[DataBase] 유닛 데이터({name}) 없음");
+        return null;
+    }
+
+    public SkillData GetRandomSkill()
+    {
+        if (cachedSkills.Count == 0)
+        {
+            Debug.LogWarning("[DataBase] 스킬 데이터가 없습니다.");
+            return null;
+        }
+        return cachedSkills[Random.Range(0, cachedSkills.Count)];
+    }
 }
