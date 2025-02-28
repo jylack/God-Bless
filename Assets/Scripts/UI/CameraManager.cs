@@ -7,21 +7,33 @@ public class CameraManager : MonoBehaviour
 {
     public CinemachineVirtualCamera virtualCamera;
     public CinemachineDollyCart dollyCart;
-    public Dictionary<string, CinemachinePath> regionDollyPaths = new Dictionary<string, CinemachinePath>();
+    public Dictionary<string, CinemachineSmoothPath> regionDollyPaths = new Dictionary<string, CinemachineSmoothPath>();
+
     public Transform player; // GOD (플레이어 역할)
 
     private Transform selectedUnit = null; // 현재 선택된 유닛
-    private string currentRegion = "A"; // 기본 지역
-    private bool isFollowingUnit = false;
+    private string currentRegion = "I"; // 기본 지역
 
-    private Vector3 lastMousePosition;
     private bool isDragging = false;
-    public float rotationSpeed = 2f; // 마우스 회전 속도
+    private Vector3 lastMousePosition;
+    public float moveSpeed = 0.1f;
+    public Vector3 defaultOffset = new Vector3(-15f, -5f, 0);
+    public float maxMoveDistance = 3f;
 
     private void Start()
     {
+        var pov = virtualCamera.GetCinemachineComponent<CinemachinePOV>();
+        if (pov != null)
+        {
+            pov.m_HorizontalAxis.m_MaxSpeed = 300f; // 좌우 회전 속도 조정
+            pov.m_VerticalAxis.m_MaxSpeed = 200f;   // 상하 회전 속도 조정
+            pov.m_VerticalAxis.m_MinValue = -30f;  // 최소 회전 각도 제한
+            pov.m_VerticalAxis.m_MaxValue = 60f;   // 최대 회전 각도 제한
+        }
+        
         StartCoroutine(InitializeCamera());
     }
+
 
     private IEnumerator InitializeCamera()
     {
@@ -52,50 +64,69 @@ public class CameraManager : MonoBehaviour
             }
         }
 
-        LoadDollyTracks(); // Dolly Track 불러오기
+        yield return new WaitForSeconds(1f);
 
         MoveToRegion(currentRegion);
     }
 
-    /// <summary>
-    /// 씬에서 Dolly Track을 찾아서 등록
-    /// </summary>
-    private void LoadDollyTracks()
-    {
-        regionDollyPaths.Clear();
-        CinemachinePath[] allPaths = FindObjectsOfType<CinemachinePath>();
-
-        foreach (var path in allPaths)
-        {
-            Debug.Log($"[CameraManager] 발견된 Dolly Track: {path.name}");
-            regionDollyPaths[path.name] = path;
-        }
-
-        Debug.Log($"[CameraManager] 초기화된 Dolly Tracks 개수: {regionDollyPaths.Count}");
-    }
-
-    /// <summary>
-    /// 특정 지역으로 이동
-    /// </summary>
     public void MoveToRegion(string region)
     {
         currentRegion = region;
-        isFollowingUnit = false; // 지역 이동 시 트랙 따라 이동하도록 설정
 
-        if (regionDollyPaths.TryGetValue(region, out CinemachinePath newPath) && newPath != null)
+        if (!regionDollyPaths.TryGetValue(region, out CinemachineSmoothPath newPath))
+        {
+            Debug.LogWarning($"[CameraManager] {region} 지역의 CinemachinePath가 없습니다! 자동 생성 시도.");
+            newPath = GenerateDollyTrack(region);
+            if (newPath == null)
+            {
+                Debug.LogError($"[CameraManager] {region} 지역의 CinemachinePath 생성 실패!");
+                return;
+            }
+            regionDollyPaths[region] = newPath;
+        }
+
+        if (newPath != null) //  예외 처리 추가
         {
             SetDollyTrack(newPath);
         }
-        else
-        {
-            Debug.LogError($"[CameraManager] {region} 지역의 CinemachinePath를 찾을 수 없습니다!");
-        }
     }
 
-    /// <summary>
-    /// Dolly Track을 따라 이동
-    /// </summary>
-    private void SetDollyTrack(CinemachinePath newPath)
+
+    //지역별로 CinemachineSmoothPath 생성
+    private CinemachineSmoothPath GenerateDollyTrack(string regionName)
+    {
+        if (!System.Enum.TryParse(regionName, out Gate_Way_Group regionEnum))
+        {
+            Debug.LogError($"[CameraManager] {regionName} 지역이 Gate_Way_Group Enum에 존재하지 않습니다!");
+            return null;
+        }
+
+        List<Transform> waypoints = WayPoints.Instance.GetWayPos(regionEnum);
+        if (waypoints.Count == 0)
+        {
+            Debug.LogWarning($"[CameraManager] {regionEnum} 지역의 웨이포인트가 없습니다!");
+            return null;
+        }
+
+        GameObject pathObject = new GameObject($"CinemachinePath_{regionName}");
+        CinemachineSmoothPath path = pathObject.AddComponent<CinemachineSmoothPath>();
+
+        path.m_Waypoints = new CinemachineSmoothPath.Waypoint[waypoints.Count];
+
+        for (int i = 0; i < waypoints.Count; i++)
+        {
+            path.m_Waypoints[i] = new CinemachineSmoothPath.Waypoint
+            {
+                position = waypoints[i].position
+            };
+        }
+        path.m_Looped = true;//만든 트랙 루프 활성화
+        path.InvalidateDistanceCache();
+        Debug.Log($"[CameraManager] {regionEnum} 지역의 CinemachineSmoothPath가 생성되었습니다.");
+        return path;
+    }
+
+    private void SetDollyTrack(CinemachineSmoothPath newPath)
     {
         if (dollyCart == null)
         {
@@ -107,40 +138,29 @@ public class CameraManager : MonoBehaviour
         dollyCart.m_Position = 0f;
         dollyCart.m_Speed = 1f;
 
+
         virtualCamera.Follow = dollyCart.transform;
         virtualCamera.LookAt = dollyCart.transform;
 
-        Debug.Log($"[CameraManager] {newPath.name} Dolly Track으로 이동");
+        Debug.Log("[CameraManager] Dolly Track으로 이동, LookAtTarget 설정됨.");
     }
 
-    /// <summary>
-    /// 유닛이 생성되면 해당 유닛을 따라가기
-    /// </summary>
     public void FollowUnit(Transform unit)
     {
-        if (unit == null)
+        if (unit != null)
         {
-            Debug.LogWarning("[CameraManager] 선택한 유닛이 없습니다!");
-            return;
+            selectedUnit = unit;//선택된 유닛을 저장하여 추적 유지
+            virtualCamera.Follow = unit;
+            virtualCamera.LookAt = unit;
+            Debug.Log($"[CameraManager] {unit.name} 유닛을 따라감");
         }
-
-        isFollowingUnit = true;
-        selectedUnit = unit;
-        virtualCamera.Follow = selectedUnit;
-        virtualCamera.LookAt = selectedUnit;
-
-        Debug.Log($"[CameraManager] {selectedUnit.name} 유닛을 따라감");
     }
 
-    /// <summary>
-    /// 유닛을 따라가기를 중단하고 다시 Dolly Track을 따라 이동
-    /// </summary>
     public void UnfollowUnit()
     {
-        selectedUnit = null;
-        isFollowingUnit = false;
+        selectedUnit = null;//유닛 따라가기 해제
 
-        if (regionDollyPaths.TryGetValue(currentRegion, out CinemachinePath newPath) && newPath != null)
+        if (regionDollyPaths.TryGetValue(currentRegion, out CinemachineSmoothPath newPath))
         {
             SetDollyTrack(newPath);
             Debug.Log($"[CameraManager] {currentRegion} 지역 Dolly Track으로 복귀.");
@@ -151,30 +171,47 @@ public class CameraManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 마우스 드래그로 카메라 회전
-    /// </summary>
     private void Update()
     {
-        if (Input.GetMouseButtonDown(1))
+        if (dollyCart != null)//유닛을 따라가는 중이 아닐 때만 자동 이동
+        {
+            dollyCart.m_Position += Time.deltaTime * dollyCart.m_Speed;
+        }
+
+
+        HandleMouseMove();
+    }
+
+    private void HandleMouseMove()
+    {
+        if (Input.GetMouseButtonDown(1)) // 우클릭 시작
         {
             isDragging = true;
             lastMousePosition = Input.mousePosition;
         }
-        else if (Input.GetMouseButtonUp(1))
+        else if (Input.GetMouseButtonUp(1)) // 우클릭 해제
         {
             isDragging = false;
         }
 
         if (isDragging)
         {
-            Vector3 delta = Input.mousePosition - lastMousePosition;
+            Vector3 mouseDelta = (Input.mousePosition - lastMousePosition);
+
+            // 이동 속도 배율 조정 (X축과 Y축의 민감도를 다르게 설정 가능)
+            float adjustedX = mouseDelta.x * moveSpeed * Time.deltaTime;
+            float adjustedY = -mouseDelta.y * moveSpeed * Time.deltaTime; // 위아래 반전
+
             lastMousePosition = Input.mousePosition;
 
-            if (virtualCamera.LookAt != null)
-            {
-                virtualCamera.transform.RotateAround(virtualCamera.LookAt.position, Vector3.up, delta.x * rotationSpeed * Time.deltaTime);
-            }
+            // 새로운 위치 계산
+            Vector3 newLocalPos = dollyCart.transform.localPosition + new Vector3(adjustedX, adjustedY, 0);
+
+            // 이동 거리 제한 (최대 이동 거리 유지)
+            newLocalPos = Vector3.ClampMagnitude(newLocalPos - defaultOffset, maxMoveDistance) + defaultOffset;
+
+
         }
     }
+
 }

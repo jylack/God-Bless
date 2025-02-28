@@ -7,7 +7,7 @@ public class GOD : MonoBehaviour
     public List<UnitCtrl> listUnit = new List<UnitCtrl>();
     public void UnitCreate(string hunterName)
     {
-        UnitData hunterData = dataBase.GetHunterData(hunterName);
+        UnitData hunterData = dataBase.GetUnitData(hunterName);
         if (hunterData == null)
         {
             Debug.LogWarning($"[God] 헌터 데이터({hunterName}) 없음.");

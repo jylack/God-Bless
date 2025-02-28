@@ -130,7 +130,7 @@ public class GateManager : MonoBehaviour
     /// </summary>
     public void SpawnAllRegions()
     {
-        List<GateData> allGates = dataBase.gateDataFiles;
+        List<GateData> allGates = dataBase.GetGateDatas();
         foreach (var gateData in allGates)
         {
             Vector3 randomPos = new Vector3(Random.Range(-50, 50), 0, Random.Range(-50, 50)); // ·£´ý À§Ä¡
