@@ -22,22 +22,38 @@ public class GateManager : MonoBehaviour
     [Header("모든 지역 참조")]
     List<Region> regions = new List<Region>();
 
+    public GameObject gatePrefab; // 게이트 프리팹
+    public int maxGatesPerRegion = 3; // 각 지역별 최대 게이트 개수
+    public float spawnInterval = 30f; // 게이트 생성 주기
+
+    private Dictionary<string, List<GameObject>> activeGates = new Dictionary<string, List<GameObject>>();
+    private CameraManager cameraManager; // 현재 활성화된 지역을 가져오기 위해 필요
+
+
     private void Awake()
     {
         if (Instance == null)
             Instance = this;
     }
 
+
     private void Start()
     {
-        // 게임 시작 시 기본 게이트 스폰
-        SpawnAllRegions();
+        //시작시 모든 지역 세부설정
+        InitializeRegions();
+
+        //// 게임 시작 시 기본 게이트 스폰
+        //SpawnAllRegions();
+
 
         // 자동 웨이브 게이트 생성 활성화 (선택적)
         if (autoSpawnEnabled)
         {
             StartCoroutine(AutoSpawnGates());
         }
+
+        
+
     }
     private void InitializeRegions()
     {
@@ -137,6 +153,70 @@ public class GateManager : MonoBehaviour
             SpawnGate(gateData, randomPos);
         }
     }
+    /// <summary>
+    /// 현재 활성화된 지역(플레이어가 위치한 지역)에 랜덤 게이트 생성
+    /// </summary>
+    private void SpawnGatesInActiveRegion()
+    {
+        string currentRegion = CameraManager.Instance.CurrentRegion; // 현재 카메라가 있는 지역 가져오기
+        if (string.IsNullOrEmpty(currentRegion))
+        {
+            Debug.LogWarning("[GateManager] 활성화된 지역 정보를 가져올 수 없습니다.");
+            return;
+        }
+
+        if (!activeGates.ContainsKey(currentRegion))
+        {
+            activeGates[currentRegion] = new List<GameObject>();
+        }
+
+        if (activeGates[currentRegion].Count >= maxGatesPerRegion)
+        {
+            Debug.LogWarning($"[GateManager] {currentRegion} 지역의 최대 게이트 개수 초과!");
+            return;
+        }
+
+        Transform spawnPoint = GetRandomSpawnPoint(currentRegion);
+        if (spawnPoint != null)
+        {
+            var pos = spawnPoint.position + new Vector3(0, -10f, 0);  
+            GameObject newGate = Instantiate(gatePrefab, pos, Quaternion.identity);
+            activeGates[currentRegion].Add(newGate);
+            Debug.Log($"[GateManager] {currentRegion} 지역에 새로운 게이트 생성! 현재 개수: {activeGates[currentRegion].Count}");
+        }
+    }
+
+    /// <summary>
+    /// 현재 지역에서 랜덤한 WayPoint를 찾아 게이트 스폰
+    /// </summary>
+    private Transform GetRandomSpawnPoint(string region)
+    {
+        GameObject regionObject = GameObject.Find($"WayPoint_{region}");
+        if (regionObject == null)
+        {
+            Debug.LogError($"[GateManager] {region} 지역을 찾을 수 없습니다!");
+            return null;
+        }
+
+        Transform[] wayPoints = regionObject.GetComponentsInChildren<Transform>();
+        List<Transform> validPoints = new List<Transform>();
+
+        foreach (var point in wayPoints)
+        {
+            if (point.name.StartsWith("WayPoint_"))
+            {
+                validPoints.Add(point);
+            }
+        }
+
+        if (validPoints.Count == 0)
+        {
+            Debug.LogError($"[GateManager] {region} 지역에 사용 가능한 WayPoint가 없습니다!");
+            return null;
+        }
+
+        return validPoints[Random.Range(0, validPoints.Count)];
+    }
 
     /// <summary>
     /// 일정 시간마다 자동으로 게이트 생성 (웨이브 시스템)
@@ -145,8 +225,10 @@ public class GateManager : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(60f); // 60초마다 새로운 게이트 생성
-            SpawnAllRegions();
+            yield return new WaitForSeconds(spawnInterval); // 60초마다 새로운 게이트 생성
+            //SpawnAllRegions();
+
+            SpawnGatesInActiveRegion();
         }
     }
 }

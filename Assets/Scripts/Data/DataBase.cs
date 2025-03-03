@@ -123,6 +123,13 @@ public class DataBase : MonoBehaviour
     {
         return gateDataFiles;
     }
+    /// <summary>
+    /// 모든 스킬 데이터를 반환
+    /// </summary>
+    public List<SkillData> GetAllSkills()
+    {
+        return new List<SkillData>(cachedSkills);
+    }
 
     /// <summary>
     /// 랜덤 스킬 반환
@@ -136,4 +143,6 @@ public class DataBase : MonoBehaviour
         }
         return cachedSkills[Random.Range(0, cachedSkills.Count)];
     }
+
+
 }

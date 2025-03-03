@@ -54,7 +54,7 @@ public class UnitEquipment : MonoBehaviour
         {
             case ItemType.Weapon:
                 equippedWeapon = null;
-                Debug.Log("Unequipped Weapon.");
+                Debug.Log("公扁 厘馒 秦力");
                 break;
 
             case ItemType.Armor:
@@ -62,10 +62,22 @@ public class UnitEquipment : MonoBehaviour
                 {
                     switch (armorType.Value)
                     {
-                        case ArmorType.Head: equippedHead = null; Debug.Log("Unequipped Head armor."); break;
-                        case ArmorType.Body: equippedBody = null; Debug.Log("Unequipped Body armor."); break;
-                        case ArmorType.Legs: equippedLegs = null; Debug.Log("Unequipped Leg armor."); break;
-                        case ArmorType.Hands: equippedHands = null; Debug.Log("Unequipped Hand armor."); break;
+                        case ArmorType.Head: 
+                            equippedHead = null; 
+                            Debug.Log("赣府 规绢备 秦力"); 
+                            break;
+                        case ArmorType.Body: 
+                            equippedBody = null;
+                            Debug.Log("个 规绢备 秦力"); 
+                            break;
+                        case ArmorType.Legs: 
+                            equippedLegs = null; 
+                            Debug.Log("促府 规绢备 秦力"); 
+                            break;
+                        case ArmorType.Hands:
+                            equippedHands = null; 
+                            Debug.Log("颊 规绢备 秦力");
+                            break;
                     }
                 }
                 break;

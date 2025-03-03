@@ -20,6 +20,17 @@ public class CameraManager : MonoBehaviour
     public Vector3 defaultOffset = new Vector3(-15f, -5f, 0);
     public float maxMoveDistance = 3f;
 
+
+    public static CameraManager Instance;
+
+    public string CurrentRegion { get => currentRegion; protected set => currentRegion = value; }
+
+    private void Awake()
+    {
+        if (Instance == null)
+            Instance = this;
+    }
+
     private void Start()
     {
         var pov = virtualCamera.GetCinemachineComponent<CinemachinePOV>();
@@ -66,12 +77,12 @@ public class CameraManager : MonoBehaviour
 
         yield return new WaitForSeconds(1f);
 
-        MoveToRegion(currentRegion);
+        MoveToRegion(CurrentRegion);
     }
 
     public void MoveToRegion(string region)
     {
-        currentRegion = region;
+        CurrentRegion = region;
 
         if (!regionDollyPaths.TryGetValue(region, out CinemachineSmoothPath newPath))
         {
@@ -160,14 +171,14 @@ public class CameraManager : MonoBehaviour
     {
         selectedUnit = null;//유닛 따라가기 해제
 
-        if (regionDollyPaths.TryGetValue(currentRegion, out CinemachineSmoothPath newPath))
+        if (regionDollyPaths.TryGetValue(CurrentRegion, out CinemachineSmoothPath newPath))
         {
             SetDollyTrack(newPath);
-            Debug.Log($"[CameraManager] {currentRegion} 지역 Dolly Track으로 복귀.");
+            Debug.Log($"[CameraManager] {CurrentRegion} 지역 Dolly Track으로 복귀.");
         }
         else
         {
-            Debug.LogWarning($"[CameraManager] {currentRegion} 지역의 Dolly Track이 없습니다. 기본 위치 유지.");
+            Debug.LogWarning($"[CameraManager] {CurrentRegion} 지역의 Dolly Track이 없습니다. 기본 위치 유지.");
         }
     }
 

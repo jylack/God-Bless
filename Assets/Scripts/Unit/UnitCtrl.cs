@@ -3,107 +3,258 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
+
+
 public class UnitCtrl : MonoBehaviour
 {
-    public UnitData data; // 유닛 데이터 (헌터, 몬스터, 시민)
+    public UnitData data; // 유닛 데이터
+    public UnitType unitType; // 유닛 타입
     public Region assignedRegion; // 할당된 지역
     private float hp;
     private List<SkillData> skills;
+    private float lastSkillUseTime = 0f;
+
     private NavMeshAgent agent;
     private int patrolIndex = 0;
+    private UnitEquipment equipment;
 
-    private UnitEquipment equipment; // 장비 시스템 추가
+    private static int unitCount = 0; // 유닛 수 카운트
+    private static int nevmashCount = 0; // nevmash 아이템 카운트
 
-    private static int unitCount = 0; // 유닛 수를 세기 위한 정적 변수
-    private static int nevmashCount = 0; // nevmash 아이템 수를 세기 위한 정적 변수
+    public float detectionRange = 10f; // 탐색 범위
+    public float attackRange = 2f; // 공격 범위
+    public float attackCooldown = 1.5f; // 공격 간격
+    private float lastAttackTime = 0f;
+    public float escapeDistance = 20f; // 시민이 도망가는 거리
+
+    private static Dictionary<int, List<UnitCtrl>> unitGroups = new Dictionary<int, List<UnitCtrl>>(); // 그룹 관리
+    private static int groupCounter = 0;
+    private int groupID;
+
+    private List<Transform> patrolWayPoints;
+    private bool isReversed = false;
+    private Transform target;
+
+    IUnitState currentState;
 
     private void Start()
     {
-        unitCount++; // 유닛 수 증가
+        unitCount++;
 
         if (data == null) return;
 
-        //체력 및 스킬 초기화
         hp = data.maxHp;
         skills = new List<SkillData>(data.skills);
         agent = GetComponent<NavMeshAgent>();
 
-        // 장비 시스템 초기화
-        equipment = GetComponent<UnitEquipment>();
-        if (equipment == null)
-        {
-            equipment = gameObject.AddComponent<UnitEquipment>();
-        }
+        equipment = GetComponent<UnitEquipment>() ?? gameObject.AddComponent<UnitEquipment>();
 
-        // 유닛이 헌터 또는 시민이면 순찰 시작
-        if (data.unitType == UnitType.Citizen || data.unitType == UnitType.Hunter)
-        {
-            StartCoroutine(PatrolRoutine());
-        }
-
-        // nevmash 아이템 할당
         AssignNevmashItem();
-
-        //임시코드
-        // 랜덤한 아이템 장착
         EquipRandomItems();
+        LoadWayPoints();
+
+        if (data.unitType == UnitType.Hunter || data.unitType == UnitType.Monster)
+        {
+            AssignToGroup();
+            StartCoroutine(AutoCombatSystem());
+        }
+        else if (data.unitType == UnitType.Citizen)
+        {
+            StartCoroutine(CitizenEscapeSystem());
+        }
+
+        // 초기 상태 설정
+        if (unitType == UnitType.Hunter || unitType == UnitType.Monster)
+        {
+            ChangeState(new PatrolState());
+        }
+        else if (unitType == UnitType.Citizen)
+        {
+            ChangeState(new CitizenPatrolState());
+        }
     }
 
     private void OnDestroy()
     {
-        unitCount--; // 유닛 수 감소
+        unitCount--;
     }
 
     private void Update()
     {
-        if (data.unitType == UnitType.Monster)
-            MonsterBehavior();
+        if (data.unitType == UnitType.Hunter || data.unitType == UnitType.Monster)
+        {
+            if (unitGroups[groupID][0] == this)
+            {
+                FindNearestEnemy();
+            }
+        }
+        else if (data.unitType == UnitType.Citizen)
+        {
+            Patrol();
+        }
+
+        if (currentState != null)
+        {
+            currentState.UpdateState(this); // 상태 업데이트 실행
+        }
+        else
+        {
+            Debug.LogError($"[UnitCtrl] {gameObject.name}의 currentState가 NULL 입니다!");
+        }
     }
 
-    private void MonsterBehavior()
+    private void AssignToGroup()
     {
-        if (data == null || agent == null) return;
-
-        GameObject hunterGO = GameObject.FindGameObjectWithTag("Hunter");
-        if (hunterGO != null)
+        if (unitGroups.ContainsKey(groupCounter) && unitGroups[groupCounter].Count < 3)
         {
-            float distance = Vector3.Distance(transform.position, hunterGO.transform.position);
-            if (distance < data.chaseRange)
+            unitGroups[groupCounter].Add(this);
+        }
+        else
+        {
+            groupCounter++;
+            unitGroups[groupCounter] = new List<UnitCtrl> { this };
+        }
+        groupID = groupCounter;
+    }
+
+    private IEnumerator AutoCombatSystem()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(0.5f);
+            if (unitGroups[groupID][0] == this)
             {
-                agent.SetDestination(hunterGO.transform.position);
+                FindNearestEnemy();
             }
         }
     }
 
-    private IEnumerator PatrolRoutine()
+    private void FindNearestEnemy()
     {
-        while (assignedRegion != null && assignedRegion.patrolPoints.Count > 0)
+        Collider[] colliders = Physics.OverlapSphere(transform.position, detectionRange);
+        Transform nearestEnemy = null;
+        float minDistance = Mathf.Infinity;
+
+        foreach (Collider col in colliders)
         {
-            Transform patrolPoint = assignedRegion.patrolPoints[patrolIndex];
-            agent.SetDestination(patrolPoint.position);
-
-            while (Vector3.Distance(transform.position, patrolPoint.position) > 1f)
+            if ((data.unitType == UnitType.Hunter && col.CompareTag("Monster")) ||
+                (data.unitType == UnitType.Monster && col.CompareTag("Hunter")))
             {
-                yield return null;
+                float distance = Vector3.Distance(transform.position, col.transform.position);
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    nearestEnemy = col.transform;
+                }
             }
+        }
 
-            patrolIndex = (patrolIndex + 1) % assignedRegion.patrolPoints.Count;
-            yield return new WaitForSeconds(Random.Range(2, 5));
+        if (nearestEnemy != null)
+        {
+            target = nearestEnemy;
+            if (minDistance <= attackRange)
+            {
+                Attack();
+            }
+            else
+            {
+                MoveToTarget();
+            }
+        }
+        else
+        {
+            Patrol();
         }
     }
 
-    // nevmash 아이템 할당
+    private void MoveToTarget()
+    {
+        if (target != null)
+        {
+            agent.SetDestination(target.position);
+            AdjustFormation();
+        }
+    }
+
+    private void Attack()
+    {
+        if (Time.time - lastAttackTime >= attackCooldown)
+        {
+            Debug.Log($"{gameObject.name}이(가) {target.name}을 공격!");
+            lastAttackTime = Time.time;
+        }
+    }
+
+    private void Patrol()
+    {
+        if (patrolWayPoints == null || patrolWayPoints.Count == 0) return;
+
+        if (agent.remainingDistance < 1f)
+        {
+            patrolIndex = isReversed ? patrolIndex - 1 : patrolIndex + 1;
+            if (patrolIndex < 0) patrolIndex = patrolWayPoints.Count - 1;
+            if (patrolIndex >= patrolWayPoints.Count) patrolIndex = 0;
+        }
+
+        agent.SetDestination(patrolWayPoints[patrolIndex].position);
+    }
+
+    private IEnumerator CitizenEscapeSystem()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(1f);
+            DetectMonsterAndEscape();
+        }
+    }
+
+    private void DetectMonsterAndEscape()
+    {
+        Collider[] colliders = Physics.OverlapSphere(transform.position, detectionRange);
+        Transform nearestMonster = null;
+        float minDistance = Mathf.Infinity;
+
+        foreach (Collider col in colliders)
+        {
+            if (col.CompareTag("Monster"))
+            {
+                float distance = Vector3.Distance(transform.position, col.transform.position);
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    nearestMonster = col.transform;
+                }
+            }
+        }
+
+        if (nearestMonster != null)
+        {
+            EscapeFrom(nearestMonster);
+        }
+    }
+
+    private void EscapeFrom(Transform monster)
+    {
+        Vector3 direction = (transform.position - monster.position).normalized;
+        Vector3 escapePoint = transform.position + direction * escapeDistance;
+
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(escapePoint, out hit, escapeDistance, NavMesh.AllAreas))
+        {
+            agent.SetDestination(hit.position);
+            Debug.Log($"{gameObject.name}이(가) {monster.name}을 피해 도망갑니다!");
+        }
+    }
+
     private void AssignNevmashItem()
     {
         if (unitCount % 3 == 0)
         {
             nevmashCount++;
             Debug.Log($"Nevmash 아이템 할당: 총 {nevmashCount}개");
-            // 여기서 nevmash 아이템을 실제로 유닛에게 할당하는 로직을 추가하세요.
         }
     }
 
-    // 랜덤 아이템 장착 기능 추가
     private void EquipRandomItems()
     {
         if (equipment == null) return;
@@ -111,24 +262,160 @@ public class UnitCtrl : MonoBehaviour
         ItemData[] allItems = DataBase.Instance.GetAllItems().ToArray();
         if (allItems.Length == 0) return;
 
-        // 무작위 무기 장착
         List<ItemData> weapons = new List<ItemData>();
         List<ItemData> armors = new List<ItemData>();
 
         foreach (var item in allItems)
         {
-            if (item.itemType == ItemType.Weapon)
-                weapons.Add(item);
-            else if (item.itemType == ItemType.Armor)
-                armors.Add(item);
+            if (item.itemType == ItemType.Weapon) weapons.Add(item);
+            else if (item.itemType == ItemType.Armor) armors.Add(item);
         }
 
-        if (weapons.Count > 0)
-            equipment.EquipItem(weapons[Random.Range(0, weapons.Count)]);
+        if (weapons.Count > 0) equipment.EquipItem(weapons[Random.Range(0, weapons.Count)]);
+        if (armors.Count > 0) equipment.EquipItem(armors[Random.Range(0, armors.Count)]);
+    }
 
-        if (armors.Count > 0)
+    public void ChangeState(IUnitState newState)
+    {
+        if (currentState != null)
         {
-            equipment.EquipItem(armors[Random.Range(0, armors.Count)]);
+            currentState.ExitState(this);
+        }
+
+        currentState = newState;
+        currentState.EnterState(this);
+    }
+    public void MoveTo(Vector3 position)
+    {
+        agent.SetDestination(position);
+    }
+
+    public void Attack(Transform target)
+    {
+        Debug.Log($"{gameObject.name}이(가) {target.name}을 공격!");
+    }
+
+    public Transform GetNextPatrolPoint()
+    {
+        // WayPoint 순찰 로직 추가 필요
+        return null;
+    }
+
+    /// <summary>
+    /// 같은 그룹 내 유닛들이 서로 겹치지 않도록 조정
+    /// </summary>
+    private void AdjustFormation()
+    {
+        if (!unitGroups.ContainsKey(groupID)) return;
+
+        int index = unitGroups[groupID].IndexOf(this);
+        if (index == -1) return;
+
+        // 유닛들이 좌우로 퍼지도록 배치
+        Vector3 offset = new Vector3((index - 1) * 1.5f, 0, (index % 2) * 1.5f);
+        agent.SetDestination(agent.destination + offset);
+    }
+
+    /// <summary>
+    /// 지역별 WayPoint 불러오기 (순찰 경로 설정)
+    /// </summary>
+    private void LoadWayPoints()
+    {
+        string regionName = (data.unitType == UnitType.Hunter || data.unitType == UnitType.Citizen) ? "WayPoint" : "WayPoint_Monster";
+
+        GameObject regionObject = GameObject.Find(regionName);
+        if (regionObject == null)
+        {
+            Debug.LogError($"[UnitCtrl] {regionName} 지역의 WayPoint를 찾을 수 없습니다!");
+            return;
+        }
+
+        Transform[] wayPoints = regionObject.GetComponentsInChildren<Transform>();
+        patrolWayPoints = new List<Transform>();
+
+        foreach (Transform point in wayPoints)
+        {
+            if (point.name.StartsWith("WayPoint_"))
+            {
+                patrolWayPoints.Add(point);
+            }
+        }
+
+        // 몬스터는 역순으로 순찰
+        if (data.unitType == UnitType.Monster)
+        {
+            patrolWayPoints.Reverse();
+            isReversed = true;
+        }
+
+        if (patrolWayPoints.Count == 0)
+        {
+            Debug.LogError($"[UnitCtrl] {regionName} 지역에 사용 가능한 WayPoint가 없습니다!");
         }
     }
+
+    private IEnumerator ApplySkillOverTime(SkillData skill)
+    {
+        Debug.Log($"{data.unitName}의 {skill.skillName} 효과 적용 시작 (지속시간: {skill.effectDuration}초)");
+        yield return new WaitForSeconds(skill.effectDuration);
+        Debug.Log($"{data.unitName}의 {skill.skillName} 효과 종료.");
+    }
+
+    /// <summary>
+    /// GOD으로부터 스킬을 부여받음
+    /// </summary>
+    public void ReceiveSkill(SkillData skill)
+    {
+        if (skills.Contains(skill))
+        {
+            Debug.Log($"{data.unitName}은(는) 이미 {skill.skillName} 스킬을 보유하고 있습니다!");
+            return;
+        }
+
+        skills.Add(skill);
+        Debug.Log($"{data.unitName}이(가) {skill.skillName} 스킬을 부여받음.");
+    }
+
+    /// <summary>
+    /// 보유한 스킬 사용 (랜덤 사용)
+    /// </summary>
+    public void UseRandomSkill()
+    {
+        if (skills.Count == 0)
+        {
+            Debug.Log($"{data.unitName}은(는) 사용할 스킬이 없습니다.");
+            return;
+        }
+
+        SkillData skillToUse = skills[Random.Range(0, skills.Count)];
+        if (Time.time - lastSkillUseTime < skillToUse.cooldown)
+        {
+            Debug.Log($"{data.unitName}의 {skillToUse.skillName} 스킬은 아직 쿨타임 중.");
+            return;
+        }
+
+        ApplySkillEffect(skillToUse);
+        lastSkillUseTime = Time.time;
+    }
+
+    /// <summary>
+    /// 스킬 효과 적용
+    /// </summary>
+    private void ApplySkillEffect(SkillData skill)
+    {
+        if (skill.isAreaEffect)
+        {
+            Debug.Log($"{data.unitName}이(가) {skill.skillName} 스킬 사용! (범위 공격)");
+        }
+        else
+        {
+            Debug.Log($"{data.unitName}이(가) {skill.skillName} 스킬 사용! (단일 대상)");
+        }
+
+        if (skill.effectDuration > 0)
+        {
+            StartCoroutine(ApplySkillOverTime(skill));
+        }
+    }
+
 }

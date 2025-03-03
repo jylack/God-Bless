@@ -9738,7 +9738,6 @@ GameObject:
   - component: {fileID: 3907679614406300944}
   - component: {fileID: 1117241510088844932}
   - component: {fileID: 6116939183738836120}
-  - component: {fileID: 8539464915446806645}
   m_Layer: 0
   m_Name: Portal green
   m_TagString: Untagged
@@ -14619,19 +14618,6 @@ ParticleSystemRenderer:
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
   m_MaskInteraction: 0
---- !u!114 &8539464915446806645
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3992058561654064293}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6b49b6990539c3147be56f2a0ab197fb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  spawnPoint: {fileID: 0}
 --- !u!1 &6275681469945861091
 GameObject:
   m_ObjectHideFlags: 0
@@ -19484,4 +19470,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b49b6990539c3147be56f2a0ab197fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gateData: {fileID: 11400000, guid: cd4fe74822accca458015be27f01e9d5, type: 2}
   spawnPoint: {fileID: 3907679614406300944}

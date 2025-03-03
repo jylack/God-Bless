@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GateCtrl : MonoBehaviour
 {
-    private GateData gateData;
+    public GateData gateData;
     private Region region;
     private bool isCleared = false;
     private float gateTimer = 60f; // 게이트 유지 시간 (예: 60초)
@@ -14,6 +14,7 @@ public class GateCtrl : MonoBehaviour
 
     private void Start()
     {
+
         if (gateData == null)
         {
             Debug.LogWarning("[GateCtrl] GateData가 설정되지 않았습니다.");
