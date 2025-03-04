@@ -11,10 +11,10 @@ public class UnitCtrl : MonoBehaviour
     public UnitType unitType; // 유닛 타입
     public Region assignedRegion; // 할당된 지역
     private float hp;
-    private List<SkillData> skills;
+    public List<SkillData> skills;
     private float lastSkillUseTime = 0f;
 
-    private NavMeshAgent agent;
+    public NavMeshAgent agent;
     private int patrolIndex = 0;
     private UnitEquipment equipment;
 
@@ -45,7 +45,25 @@ public class UnitCtrl : MonoBehaviour
 
         hp = data.maxHp;
         skills = new List<SkillData>(data.skills);
+
         agent = GetComponent<NavMeshAgent>();
+
+        if (agent == null)
+        {
+            Debug.LogError($"[UnitCtrl] {gameObject.name}에 NavMeshAgent가 존재하지 않습니다! GOD에서 추가되었는지 확인하세요.");
+            return;
+        }
+        if (!agent.isOnNavMesh)
+        {
+            Debug.LogError($"[UnitCtrl] {gameObject.name}이(가) NavMesh에 배치되지 않았습니다! 위치: {transform.position}");
+            return;
+        }
+
+        //agent = gameObject.AddComponent<NavMeshAgent>();
+
+        //agent.speed = 3.5f;
+        //agent.acceleration = 8f;
+        //agent.angularSpeed = 120f;
 
         equipment = GetComponent<UnitEquipment>() ?? gameObject.AddComponent<UnitEquipment>();
 
@@ -187,17 +205,28 @@ public class UnitCtrl : MonoBehaviour
 
     private void Patrol()
     {
+        if (agent == null)
+        {
+            Debug.LogError($"[UnitCtrl] {gameObject.name}에 NavMeshAgent가 없습니다!");
+            return;
+        }
+
+        if (!agent.isOnNavMesh)
+        {
+            Debug.LogError($"[UnitCtrl] {gameObject.name}이(가) NavMesh에 배치되지 않았습니다! 이동 불가능.");
+            return;
+        }
+
         if (patrolWayPoints == null || patrolWayPoints.Count == 0) return;
 
         if (agent.remainingDistance < 1f)
         {
-            patrolIndex = isReversed ? patrolIndex - 1 : patrolIndex + 1;
-            if (patrolIndex < 0) patrolIndex = patrolWayPoints.Count - 1;
-            if (patrolIndex >= patrolWayPoints.Count) patrolIndex = 0;
+            patrolIndex = (patrolIndex + 1) % patrolWayPoints.Count;
         }
 
         agent.SetDestination(patrolWayPoints[patrolIndex].position);
     }
+
 
     private IEnumerator CitizenEscapeSystem()
     {
@@ -321,12 +350,26 @@ public class UnitCtrl : MonoBehaviour
     /// </summary>
     private void LoadWayPoints()
     {
-        string regionName = (data.unitType == UnitType.Hunter || data.unitType == UnitType.Citizen) ? "WayPoint" : "WayPoint_Monster";
+        GameObject[] possibleWayPoints = Resources.FindObjectsOfTypeAll<GameObject>();
+        GameObject regionObject = null;
 
-        GameObject regionObject = GameObject.Find(regionName);
+        foreach (var obj in possibleWayPoints)
+        {
+            if (obj.name.StartsWith("WayPoint"))
+            {
+                regionObject = obj;
+                break;
+            }
+        }
+
         if (regionObject == null)
         {
-            Debug.LogError($"[UnitCtrl] {regionName} 지역의 WayPoint를 찾을 수 없습니다!");
+            Debug.LogError($"[UnitCtrl] 'WayPoint' 오브젝트를 찾을 수 없습니다. 현재 씬에 존재하는 오브젝트 목록:");
+            GameObject[] allObjects = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
+            foreach (GameObject obj in allObjects)
+            {
+                Debug.Log($" - {obj.name}");
+            }
             return;
         }
 
@@ -341,16 +384,9 @@ public class UnitCtrl : MonoBehaviour
             }
         }
 
-        // 몬스터는 역순으로 순찰
-        if (data.unitType == UnitType.Monster)
-        {
-            patrolWayPoints.Reverse();
-            isReversed = true;
-        }
-
         if (patrolWayPoints.Count == 0)
         {
-            Debug.LogError($"[UnitCtrl] {regionName} 지역에 사용 가능한 WayPoint가 없습니다!");
+            Debug.LogError($"[UnitCtrl] {regionObject.name} 지역에 사용 가능한 WayPoint가 없습니다!");
         }
     }
 
@@ -366,6 +402,17 @@ public class UnitCtrl : MonoBehaviour
     /// </summary>
     public void ReceiveSkill(SkillData skill)
     {
+        if (data == null)
+        {
+            Debug.LogError($"[UnitCtrl] {gameObject.name}의 UnitData가 초기화되지 않았습니다!");
+            return;
+        }
+
+        if (skills == null)
+        {
+            skills = new List<SkillData>();
+        }
+
         if (skills.Contains(skill))
         {
             Debug.Log($"{data.unitName}은(는) 이미 {skill.skillName} 스킬을 보유하고 있습니다!");

@@ -48,7 +48,7 @@ public class CameraManager : MonoBehaviour
 
     private IEnumerator InitializeCamera()
     {
-        Debug.Log("[CameraManager] 카메라 초기화 시작");
+        //Debug.Log("[CameraManager] 카메라 초기화 시작");
 
         if (virtualCamera == null)
         {
@@ -86,7 +86,7 @@ public class CameraManager : MonoBehaviour
 
         if (!regionDollyPaths.TryGetValue(region, out CinemachineSmoothPath newPath))
         {
-            Debug.LogWarning($"[CameraManager] {region} 지역의 CinemachinePath가 없습니다! 자동 생성 시도.");
+            //Debug.LogWarning($"[CameraManager] {region} 지역의 CinemachinePath가 없습니다! 자동 생성 시도.");
             newPath = GenerateDollyTrack(region);
             if (newPath == null)
             {
@@ -133,7 +133,7 @@ public class CameraManager : MonoBehaviour
         }
         path.m_Looped = true;//만든 트랙 루프 활성화
         path.InvalidateDistanceCache();
-        Debug.Log($"[CameraManager] {regionEnum} 지역의 CinemachineSmoothPath가 생성되었습니다.");
+        //Debug.Log($"[CameraManager] {regionEnum} 지역의 CinemachineSmoothPath가 생성되었습니다.");
         return path;
     }
 
@@ -153,7 +153,7 @@ public class CameraManager : MonoBehaviour
         virtualCamera.Follow = dollyCart.transform;
         virtualCamera.LookAt = dollyCart.transform;
 
-        Debug.Log("[CameraManager] Dolly Track으로 이동, LookAtTarget 설정됨.");
+        //Debug.Log("[CameraManager] Dolly Track으로 이동, LookAtTarget 설정됨.");
     }
 
     public void FollowUnit(Transform unit)

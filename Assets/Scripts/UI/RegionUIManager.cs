@@ -37,7 +37,7 @@ public class RegionUIManager : MonoBehaviour
             if (generatedPath != null)
             {
                 cameraManager.regionDollyPaths[regionName] = generatedPath;
-                Debug.Log($"[RegionUIManager] {regionName} 경로가 생성되었습니다.");
+                //Debug.Log($"[RegionUIManager] {regionName} 경로가 생성되었습니다.");
             }
         }
     }
