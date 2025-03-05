@@ -9,6 +9,10 @@ public class CameraManager : MonoBehaviour
     public CinemachineDollyCart dollyCart;
     public Dictionary<string, CinemachineSmoothPath> regionDollyPaths = new Dictionary<string, CinemachineSmoothPath>();
 
+    private List<Transform> cameraWaypoints = new List<Transform>();
+    private int currentWaypointIndex = 0;
+    private Transform currentTarget;
+
     public Transform player; // GOD (플레이어 역할)
 
     private Transform selectedUnit = null; // 현재 선택된 유닛
@@ -223,6 +227,73 @@ public class CameraManager : MonoBehaviour
 
 
         }
+    }
+
+    /// <summary>
+    /// 특정 지역의 Camera Way Point를 불러와 리스트에 저장
+    /// </summary>
+    public void LoadCameraWayPoints(string region)
+    {
+        GameObject cameraWayPointGroup = GameObject.Find($"Camera Way Point {region}");
+        if (cameraWayPointGroup == null)
+        {
+            Debug.LogError($"[CameraManager] {region} 지역의 Camera Way Points를 찾을 수 없습니다!");
+            return;
+        }
+
+        cameraWaypoints.Clear();
+        foreach (Transform child in cameraWayPointGroup.transform)
+        {
+            cameraWaypoints.Add(child);
+        }
+
+        if (cameraWaypoints.Count > 0)
+        {
+            currentWaypointIndex = 0;
+            MoveToNextWaypoint();
+        }
+        else
+        {
+            Debug.LogError($"[CameraManager] {region} 지역에 Camera Way Points가 없습니다!");
+        }
+    }
+
+    /// <summary>
+    /// 현재 지역 변경 후, 해당 지역의 카메라 웨이포인트 로드
+    /// </summary>
+    public void ChangeRegion(string newRegion)
+    {
+        currentRegion = newRegion;
+        LoadCameraWayPoints(newRegion);
+    }
+
+    /// <summary>
+    /// 카메라가 다음 웨이포인트로 이동
+    /// </summary>
+    private void MoveToNextWaypoint()
+    {
+        if (cameraWaypoints.Count == 0) return;
+
+        currentTarget = cameraWaypoints[currentWaypointIndex];
+        currentWaypointIndex = (currentWaypointIndex + 1) % cameraWaypoints.Count; // 순환 이동
+
+        StopAllCoroutines();
+        StartCoroutine(MoveCameraToTarget());
+    }
+
+    /// <summary>
+    /// 카메라 이동을 부드럽게 처리
+    /// </summary>
+    private IEnumerator MoveCameraToTarget()
+    {
+        while (Vector3.Distance(virtualCamera.transform.position, currentTarget.position) > 0.1f)
+        {
+            virtualCamera.transform.position = Vector3.Lerp(virtualCamera.transform.position, currentTarget.position, moveSpeed * Time.deltaTime);
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(2f); // 일정 시간 정지 후 다음 이동
+        MoveToNextWaypoint();
     }
 
 }

@@ -19,7 +19,7 @@ public class UnitCtrl : MonoBehaviour
     private UnitEquipment equipment;
 
     private static int unitCount = 0; // 유닛 수 카운트
-    private static int nevmashCount = 0; // nevmash 아이템 카운트
+
 
     public float detectionRange = 10f; // 탐색 범위
     public float attackRange = 2f; // 공격 범위
@@ -32,7 +32,6 @@ public class UnitCtrl : MonoBehaviour
     private int groupID;
 
     private List<Transform> patrolWayPoints;
-    private bool isReversed = false;
     private Transform target;
 
     IUnitState currentState;
@@ -59,17 +58,13 @@ public class UnitCtrl : MonoBehaviour
             return;
         }
 
-        //agent = gameObject.AddComponent<NavMeshAgent>();
-
-        //agent.speed = 3.5f;
-        //agent.acceleration = 8f;
-        //agent.angularSpeed = 120f;
-
-        equipment = GetComponent<UnitEquipment>() ?? gameObject.AddComponent<UnitEquipment>();
-
-        AssignNevmashItem();
-        EquipRandomItems();
         LoadWayPoints();
+
+        if (patrolWayPoints == null || patrolWayPoints.Count == 0)
+        {
+            Debug.LogError($"[UnitCtrl] {gameObject.name}이(가) 순찰할 웨이포인트를 찾을 수 없습니다!");
+        }
+
 
         if (data.unitType == UnitType.Hunter || data.unitType == UnitType.Monster)
         {
@@ -155,9 +150,11 @@ public class UnitCtrl : MonoBehaviour
 
         foreach (Collider col in colliders)
         {
+            //둘이 어차피 같은로직이라 하나로 합쳐봄
             if ((data.unitType == UnitType.Hunter && col.CompareTag("Monster")) ||
                 (data.unitType == UnitType.Monster && col.CompareTag("Hunter")))
             {
+
                 float distance = Vector3.Distance(transform.position, col.transform.position);
                 if (distance < minDistance)
                 {
@@ -275,35 +272,6 @@ public class UnitCtrl : MonoBehaviour
         }
     }
 
-    private void AssignNevmashItem()
-    {
-        if (unitCount % 3 == 0)
-        {
-            nevmashCount++;
-            Debug.Log($"Nevmash 아이템 할당: 총 {nevmashCount}개");
-        }
-    }
-
-    private void EquipRandomItems()
-    {
-        if (equipment == null) return;
-
-        ItemData[] allItems = DataBase.Instance.GetAllItems().ToArray();
-        if (allItems.Length == 0) return;
-
-        List<ItemData> weapons = new List<ItemData>();
-        List<ItemData> armors = new List<ItemData>();
-
-        foreach (var item in allItems)
-        {
-            if (item.itemType == ItemType.Weapon) weapons.Add(item);
-            else if (item.itemType == ItemType.Armor) armors.Add(item);
-        }
-
-        if (weapons.Count > 0) equipment.EquipItem(weapons[Random.Range(0, weapons.Count)]);
-        if (armors.Count > 0) equipment.EquipItem(armors[Random.Range(0, armors.Count)]);
-    }
-
     public void ChangeState(IUnitState newState)
     {
         if (currentState != null)
@@ -324,10 +292,21 @@ public class UnitCtrl : MonoBehaviour
         Debug.Log($"{gameObject.name}이(가) {target.name}을 공격!");
     }
 
+
+    /// <summary>
+    /// 순찰할 웨이포인트를 반환 (순서대로 이동)
+    /// </summary>
     public Transform GetNextPatrolPoint()
     {
-        // WayPoint 순찰 로직 추가 필요
-        return null;
+        if (patrolWayPoints == null || patrolWayPoints.Count == 0)
+        {
+            Debug.LogError($"[UnitCtrl] {gameObject.name}이(가) 순찰할 웨이포인트가 없습니다!");
+            return null;
+        }
+
+        Transform nextPoint = patrolWayPoints[patrolIndex];
+        patrolIndex = (patrolIndex + 1) % patrolWayPoints.Count; // 순환 순찰
+        return nextPoint;
     }
 
     /// <summary>
@@ -338,10 +317,12 @@ public class UnitCtrl : MonoBehaviour
         if (!unitGroups.ContainsKey(groupID)) return;
 
         int index = unitGroups[groupID].IndexOf(this);
+
         if (index == -1) return;
 
         // 유닛들이 좌우로 퍼지도록 배치
         Vector3 offset = new Vector3((index - 1) * 1.5f, 0, (index % 2) * 1.5f);
+
         agent.SetDestination(agent.destination + offset);
     }
 
@@ -352,6 +333,15 @@ public class UnitCtrl : MonoBehaviour
     {
         GameObject[] possibleWayPoints = Resources.FindObjectsOfTypeAll<GameObject>();
         GameObject regionObject = null;
+        
+        string currentRegion = FindObjectOfType<CameraManager>()?.CurrentRegion;
+        if (string.IsNullOrEmpty(currentRegion))
+        {
+            Debug.LogError("[UnitCtrl] 현재 지역을 찾을 수 없습니다! CameraManager가 활성화되어 있는지 확인하세요.");
+            return;
+        }
+
+
 
         foreach (var obj in possibleWayPoints)
         {
@@ -361,6 +351,9 @@ public class UnitCtrl : MonoBehaviour
                 break;
             }
         }
+
+
+        regionObject = GameObject.Find($"WayPoint_{currentRegion}");
 
         if (regionObject == null)
         {
